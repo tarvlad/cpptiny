@@ -93,8 +93,8 @@ public:
     }
 
     Line<Float> perpendicular_at(const Vector<Float>& point) const {
-        Vector<Float> non_parallel_vec = this->direction_.y() != 0 || this->direction_.z() != 0 ? Vector<Float>(1, 0, 0) : Vector<Float>(0, 1, 0);
-        Vector<Float> perp_direction = this->direction_.cross(non_parallel_vec);
+        Vector<Float> non_parallel_vec = direction_.y() != 0 || direction_.z() != 0 ? Vector<Float>(1, 0, 0) : Vector<Float>(0, 1, 0);
+        Vector<Float> perp_direction = direction_.cross(non_parallel_vec);
         return Line<Float>(point, perp_direction.normalized());
     }
 };
