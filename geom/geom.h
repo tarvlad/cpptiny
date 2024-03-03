@@ -67,6 +67,7 @@ public:
     }
 };
 
+
 template <std::floating_point Float>
 class Line {
     Vector<Float> point_, direction_;
