@@ -1,13 +1,13 @@
-#include <iostream>
-#include <cstdlib>
-#include <vector>
-#include <algorithm>
 #include "rb_tree.h"
+#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <vector>
 
 void test_insert_and_remove_operations() {
     RBTree<int, int> tree;
-    std::vector<int> keys_to_insert = {50, 20, 60, 10, 30, 70, 5, 15, 25, 35, 65, 75};
-    std::vector<int> keys_to_remove = {30, 10, 60, 50};
+    std::vector<int> keys_to_insert = { 50, 20, 60, 10, 30, 70, 5, 15, 25, 35, 65, 75 };
+    std::vector<int> keys_to_remove = { 30, 10, 60, 50 };
 
     for (int key : keys_to_insert) {
         tree.insert(key, key);

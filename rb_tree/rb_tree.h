@@ -1,9 +1,9 @@
 #pragma once
 
+#include <cassert>
 #include <compare>
 #include <cstddef>
 #include <cstdint>
-#include <cassert>
 #include <iostream>
 
 template <std::three_way_comparable K, typename V>
@@ -19,7 +19,7 @@ class RBTree {
             delete link[1];
         }
     };
-    
+
     Node *root_;
 
     static bool is_red(Node *node) {
@@ -32,7 +32,7 @@ class RBTree {
     static Node *single_rot(Node *root, uint8_t dir) {
         assert(root != nullptr);
         assert(dir == 0 || dir == 1);
-        Node* storage = root->link[!dir];
+        Node *storage = root->link[!dir];
 
         root->link[!dir] = storage->link[dir];
         storage->link[dir] = root;
@@ -50,16 +50,15 @@ class RBTree {
         return single_rot(root, dir);
     }
 
-    // returns 0 if tree is incorrect BST
+    // returns 0 if tree is incorrect BST and assertions enabled
     static size_t black_height(Node *root) {
         size_t l_height, r_height;
 
         if (root == nullptr) {
             return 1;
-        }
-        else {
-            Node* ln = root->link[0];
-            Node* rn = root->link[1];
+        } else {
+            Node *ln = root->link[0];
+            Node *rn = root->link[1];
 
 #ifndef NDEBUG
             if (is_red(root)) {
@@ -88,17 +87,16 @@ class RBTree {
 #endif
                 return is_red(root) ? l_height : l_height + 1;
 #ifndef NDEBUG
-            }
-            else {
+            } else {
                 return 0;
             }
 #endif
         }
     }
-    
+
 public:
     RBTree()
-    : root_{ nullptr } {};
+        : root_{ nullptr } {};
 
     ~RBTree() {
         delete root_;
@@ -107,11 +105,10 @@ public:
     void insert(const K &key, const V &value) {
         if (root_ == nullptr) {
             root_ = new Node{ key, value, { nullptr, nullptr }, 1 };
-        }
-        else {
+        } else {
             //TODO may be optimise K{} and V{} ??
             Node head = { K{}, V{}, { nullptr, nullptr }, 1 };
-            Node* g, * t, * p, * q;
+            Node *g, *t, *p, *q;
             uint8_t dir, last_dir;
 
             dir = 0;
@@ -122,8 +119,7 @@ public:
             while (true) {
                 if (q == nullptr) {
                     p->link[dir] = q = new Node{ key, value, { nullptr, nullptr }, 1 };
-                }
-                else if (is_red(q->link[0]) && is_red(q->link[1])) {
+                } else if (is_red(q->link[0]) && is_red(q->link[1])) {
                     q->red = 1;
                     q->link[0]->red = 0;
                     q->link[1]->red = 0;
@@ -134,8 +130,7 @@ public:
 
                     if (q == p->link[last_dir]) {
                         t->link[dir1] = single_rot(g, !last_dir);
-                    }
-                    else {
+                    } else {
                         t->link[dir1] = double_rot(g, !last_dir);
                     }
                 }
@@ -169,7 +164,7 @@ public:
     void remove(const K &key) {
         if (root_ != nullptr) {
             Node head = { K{}, V{}, { nullptr, nullptr }, 0 };
-            Node* p, * q, * g, * f;
+            Node *p, *q, *g, *f;
             uint8_t dir = 1;
 
             f = nullptr;
@@ -192,23 +187,20 @@ public:
                 if (!is_red(q) && !is_red(q->link[dir])) {
                     if (is_red(q->link[!dir])) {
                         p = p->link[last_dir] = single_rot(q, dir);
-                    }
-                    else if (!is_red(q->link[!dir])) {
-                        Node* s = p->link[!last_dir];
+                    } else if (!is_red(q->link[!dir])) {
+                        Node *s = p->link[!last_dir];
 
                         if (s != nullptr) {
                             if (!is_red(s->link[!last_dir]) && !is_red(s->link[last_dir])) {
                                 p->red = 0;
                                 s->red = 1;
                                 q->red = 1;
-                            }
-                            else {
+                            } else {
                                 uint8_t dir1 = g->link[1] == p;
 
                                 if (is_red(s->link[last_dir])) {
                                     g->link[dir1] = double_rot(p, last_dir);
-                                }
-                                else if (is_red(s->link[!last_dir])) {
+                                } else if (is_red(s->link[!last_dir])) {
                                     g->link[dir1] = single_rot(p, last_dir);
                                 }
 
@@ -240,15 +232,13 @@ public:
     }
 
     bool contains(const K &key) const {
-        Node* node = root_;
+        Node *node = root_;
         while (node != nullptr) {
             if (key < node->key) {
                 node = node->link[0];
-            }
-            else if (key > node->key) {
+            } else if (key > node->key) {
                 node = node->link[1];
-            }
-            else {
+            } else {
                 return true;
             }
         }
