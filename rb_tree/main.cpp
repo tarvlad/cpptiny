@@ -43,12 +43,12 @@ void test_insert_and_remove_operations() {
 
 void random_tests() {
     RBTree<int, int> tree;
-    const size_t operation_count = 10000;
+    size_t operations_count = 10000;
     std::vector<int> inserted_keys;
 
-    for (size_t i = 0; i < operation_count; ++i) {
+    for (size_t i = 0; i < operations_count; ++i) {
         int operation = rand() % 2;
-        int key = rand() % operation_count;
+        int key = rand() % operations_count;
 
         if (operation == 0) {
             tree.insert(key, key);
