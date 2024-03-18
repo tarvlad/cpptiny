@@ -5,14 +5,64 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <concepts>
 
 template <std::three_way_comparable K, typename V>
 class RBTree {
+    enum Color {
+        RED, BLACK
+    };
+
     struct Node {
         K key;
         V value;
         Node *link[2];
-        uint8_t red;
+        Color color;
+
+        Node(const K &k, const V &v, Color c) 
+            : key{ k }, value{ v }, link{ nullptr, nullptr }, color{ c } {
+        }
+
+        Node(const K &k, const V &v, Node *l, Node *r, Color c)
+            : key{ k }, value{ v }, link{ l, r }, color{ c } {}
+
+        Node(const Node &n)
+            : key{ n.key }, value{ n.value }, link{ nullptr, nullptr }, color{ n.color } {
+            
+            if (n.link[0] != nullptr) {
+                link[0] = new Node{ n.link[0] };
+            }
+            if (n.link[1] != nullptr) {
+                link[1] = new Node{ n.link[1] };
+            }
+        }
+
+        Node &operator=(const Node &n) {
+            key = n.key;
+            value = n.value;
+            
+            delete link[0];
+            delete link[1];
+            
+            link[0] = n.link[0];
+            link[1] = n.link[1];
+            return *this;
+        }
+
+        Node &operator=(Node &&n) {
+            key = std::move(n.key);
+            value = std::move(n.value);
+            
+            delete link[0];
+            delete link[1];
+
+            link[0] = n.link[0];
+            link[1] = n.link[1];
+            
+            n.link[0] = nullptr;
+            n.link[1] = nullptr;
+            return *this;
+        }
 
         ~Node() {
             delete link[0];
@@ -24,7 +74,7 @@ class RBTree {
 
     static bool is_red(Node *node) {
         if (node != nullptr) {
-            return node->red == 1;
+            return node->color == RED;
         }
         return false;
     }
@@ -37,8 +87,8 @@ class RBTree {
         root->link[!dir] = storage->link[dir];
         storage->link[dir] = root;
 
-        root->red = 1;
-        storage->red = 0;
+        root->color = RED;
+        storage->color = BLACK;
 
         return storage;
     }
@@ -98,16 +148,33 @@ public:
     RBTree()
         : root_{ nullptr } {};
 
+    RBTree(const RBTree &t) 
+        : root_{ new Node{ *t.root_ } } {
+    }
+
     ~RBTree() {
         delete root_;
     }
 
+    RBTree &operator=(const RBTree &t) {
+        delete root_;
+        root_ = new Node{ *t.root };
+        return *this;
+    }
+
+    RBTree &operator=(RBTree &&t) {
+        delete root_;
+        root_ = t.root_;
+        t.root_ = nullptr;
+        return *this;
+    }
+
     void insert(const K &key, const V &value) {
         if (root_ == nullptr) {
-            root_ = new Node{ key, value, { nullptr, nullptr }, 1 };
+            root_ = new Node{ key, value, BLACK };
         } else {
             //TODO may be optimise K{} and V{} ??
-            Node head = { K{}, V{}, { nullptr, nullptr }, 1 };
+            Node head = { K{}, V{}, RED };
             Node *g, *t, *p, *q;
             uint8_t dir, last_dir;
 
@@ -118,11 +185,11 @@ public:
 
             while (true) {
                 if (q == nullptr) {
-                    p->link[dir] = q = new Node{ key, value, { nullptr, nullptr }, 1 };
+                    p->link[dir] = q = new Node{ key, value, RED };
                 } else if (is_red(q->link[0]) && is_red(q->link[1])) {
-                    q->red = 1;
-                    q->link[0]->red = 0;
-                    q->link[1]->red = 0;
+                    q->color = RED;
+                    q->link[0]->color = BLACK;
+                    q->link[1]->color = BLACK;
                 }
 
                 if (is_red(q) && is_red(p)) {
@@ -156,14 +223,14 @@ public:
             head.link[1] = nullptr;
         }
 
-        root_->red = 0;
+        root_->color = BLACK;
 
         assert(black_height(root_) != 0);
     }
 
     void remove(const K &key) {
         if (root_ != nullptr) {
-            Node head = { K{}, V{}, { nullptr, nullptr }, 0 };
+            Node head = { K{}, V{}, BLACK };
             Node *p, *q, *g, *f;
             uint8_t dir = 1;
 
@@ -192,9 +259,9 @@ public:
 
                         if (s != nullptr) {
                             if (!is_red(s->link[!last_dir]) && !is_red(s->link[last_dir])) {
-                                p->red = 0;
-                                s->red = 1;
-                                q->red = 1;
+                                p->color = BLACK;
+                                s->color = RED;
+                                q->color = RED;
                             } else {
                                 uint8_t dir1 = g->link[1] == p;
 
@@ -204,9 +271,9 @@ public:
                                     g->link[dir1] = single_rot(p, last_dir);
                                 }
 
-                                q->red = g->link[dir1]->red = 1;
-                                g->link[dir1]->link[0]->red = 0;
-                                g->link[dir1]->link[1]->red = 0;
+                                q->color = g->link[dir1]->color = RED;
+                                g->link[dir1]->link[0]->color = BLACK;
+                                g->link[dir1]->link[1]->color = BLACK;
                             }
                         }
                     }
@@ -224,7 +291,7 @@ public:
             head.link[0] = nullptr;
             head.link[1] = nullptr;
             if (root_ != nullptr) {
-                root_->red = 0;
+                root_->color = BLACK;
             }
         }
 
